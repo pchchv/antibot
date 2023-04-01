@@ -90,4 +90,16 @@ func (v *visitor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, staticBody)
 }
 
-func main() {}
+func main() {
+	limiter := newRateLimiter(limit)
+	visitor := newVisitor(limiter)
+
+	server := &http.Server{
+		Addr:    ":8080",
+		Handler: visitor,
+	}
+
+	if err := server.ListenAndServe(); err != nil {
+		panic(err)
+	}
+}
