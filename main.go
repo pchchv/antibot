@@ -1,13 +1,17 @@
 package main
 
 import (
+	"fmt"
+	"net"
+	"net/http"
 	"sync"
 	"time"
 )
 
 const (
-	limit    = 5                // Maximum requests in the period
-	interval = 10 * time.Second // Time period in which there will be a restriction on requests
+	limit      = 5                // Maximum requests in the period
+	interval   = 10 * time.Second // Time period in which there will be a restriction on requests
+	staticBody = "Hello, World!"  // Static content that will be rendered on a successful request
 )
 
 type visitor struct {
@@ -55,6 +59,35 @@ func (rl *rateLimiter) allow() bool {
 	}
 
 	return false
+}
+
+func (v *visitor) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET requests are allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, "Bad Request", http.StatusBadRequest)
+		return
+	}
+
+	// Checking for an IPv4 subnet
+	parsedIP := net.ParseIP(ip)
+	if parsedIP.To4() == nil {
+		http.Error(w, "IPv4 only", http.StatusBadRequest)
+		return
+	}
+
+	// Restricting the number of requests
+	if !v.limiter.allow() {
+		http.Error(w, "Too Many Requests", http.StatusTooManyRequests)
+		return
+	}
+
+	// Output static content on successful request
+	fmt.Fprint(w, staticBody)
 }
 
 func main() {}
