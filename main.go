@@ -16,3 +16,13 @@ type rateLimiter struct {
 	limit  int
 	window time.Time
 }
+
+func newRateLimiter(limit int) *rateLimiter {
+	return &rateLimiter{
+		count:  0,
+		limit:  limit,
+		window: time.Now(),
+	}
+}
+
+func main() {}
