@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+const limit = 5 // Maximum requests in the period
+
 type visitor struct {
 	limiter  *rateLimiter // Request counter for this visitor
 	lastSeen time.Time    // Time of last request
@@ -22,6 +24,13 @@ func newRateLimiter(limit int) *rateLimiter {
 		count:  0,
 		limit:  limit,
 		window: time.Now(),
+	}
+}
+
+func newVisitor(limiter *rateLimiter) *visitor {
+	return &visitor{
+		limiter:  limiter,
+		lastSeen: time.Now(),
 	}
 }
 
